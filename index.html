@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#f5f0eb">
+<title>ON MODE</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Noto+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f7f3ee; --bg2:#eee8e0; --card:#ffffff;
+  --border:#e2d9cf; --border2:#d4c9bc;
+  --text:#2a2118; --text-mid:#7a6a5a; --text-dim:#b0a090;
+  --accent:#7eb8f7; --accent2:#f7a8c4; --accent3:#b8a9f7; --accent4:#a8e6cf;
+  --red:#f77e7e;
+  --cat-ex:#ff8c69; --cat-ch:#69c0ff; --cat-st:#b069ff; --cat-sd:#2a9a6a;
+  --shadow:0 2px 16px rgba(42,33,24,.08);
+  --shadow-lg:0 8px 32px rgba(42,33,24,.14);
+  --r:16px; --r-sm:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100dvh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:-80px;right:-60px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(126,184,247,.25) 0%,transparent 70%);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;bottom:100px;left:-80px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(247,168,196,.2) 0%,transparent 70%);pointer-events:none;z-index:0}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;z-index:999;background:var(–bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:opacity .6s ease}
+#splash.hide{opacity:0;pointer-events:none}
+.splash-emoji{font-size:52px;margin-bottom:8px;animation:bounceIn .8s ease}
+@keyframes bounceIn{0%{transform:scale(.5);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.splash-title{font-family:‘DM Serif Display’,serif;font-size:40px;letter-spacing:2px;color:var(–text)}
+.splash-sub{font-size:13px;color:var(–text-dim);font-weight:300}
+.splash-dots{display:flex;gap:6px;margin-top:20px}
+.splash-dot{width:7px;height:7px;border-radius:50%;background:var(–border2);animation:dotPulse 1.2s ease infinite}
+.splash-dot:nth-child(2){animation-delay:.2s;background:var(–accent)}
+.splash-dot:nth-child(3){animation-delay:.4s;background:var(–accent2)}
+.splash-dot:nth-child(4){animation-delay:.6s;background:var(–accent3)}
+@keyframes dotPulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.4);opacity:1}}
+
+/* LAYOUT */
+#app{display:flex;flex-direction:column;min-height:100dvh;position:relative;z-index:1}
+
+/* HEADER */
+header{padding:52px 20px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.date-chip{display:inline-flex;align-items:center;gap:5px;background:var(–card);border:1px solid var(–border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(–text-mid);box-shadow:var(–shadow)}
+.date-dot{width:6px;height:6px;border-radius:50%;background:var(–accent2)}
+.header-title{font-family:‘DM Serif Display’,serif;font-size:34px;color:var(–text);line-height:1.1;margin-top:8px}
+.header-title em{font-style:italic;color:var(–accent)}
+.header-right{text-align:right;padding-top:4px}
+.time-bubble{background:var(–card);border:1px solid var(–border);border-radius:14px;padding:8px 14px;box-shadow:var(–shadow)}
+.time-big{font-size:22px;font-weight:600;letter-spacing:1px}
+.progress-chip{display:inline-block;margin-top:6px;background:var(–accent);color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:500}
+
+/* PROGRESS BAR */
+.progress-bar-wrap{margin:16px 20px 0}
+.progress-bar-bg{height:6px;background:var(–border);border-radius:3px;overflow:hidden}
+.progress-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(–accent),var(–accent2));transition:width .6s cubic-bezier(.4,0,.2,1)}
+.progress-label-row{display:flex;justify-content:space-between;margin-top:6px}
+.progress-label-text{font-size:11px;color:var(–text-dim)}
+
+/* TABS */
+.tabs{display:flex;margin:16px 20px 0;gap:8px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:8px 18px;background:var(–card);border:1.5px solid var(–border);border-radius:24px;font-size:13px;font-weight:500;color:var(–text-mid);cursor:pointer;transition:all .2s;white-space:nowrap}
+.tab.active{background:var(–text);border-color:var(–text);color:#fff}
+
+/* PANELS */
+.panel{display:none;flex:1;padding:16px 20px 100px}
+.panel.active{display:block}
+
+/* SECTION */
+.section-label{font-size:11px;color:var(–text-dim);font-weight:500;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;margin-top:20px}
+.section-label:first-child{margin-top:0}
+
+/* TASK BLOCK */
+.block-list{display:flex;flex-direction:column;gap:10px}
+.block{background:var(–card);border:1.5px solid var(–border);border-radius:var(–r);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;box-shadow:var(–shadow);position:relative;overflow:hidden;animation:slideUp .3s ease both}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.block:active{transform:scale(.98);box-shadow:none}
+.block.done{opacity:.45}
+.block.done .block-title{text-decoration:line-through}
+.block::before{content:’’;position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 2px 2px 0;background:var(–border2)}
+.block[data-cat=“운동”]::before{background:var(–cat-ex)}
+.block[data-cat=“집안일”]::before{background:var(–cat-ch)}
+.block[data-cat=“공부”]::before{background:var(–cat-st)}
+.block[data-cat=“자기계발”]::before{background:var(–cat-sd)}
+.block.active-now{border-color:var(–accent);background:linear-gradient(135deg,#fff 0%,rgba(126,184,247,.08) 100%)}
+.now-badge{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:var(–accent);color:#fff;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:600}
+.block-check{width:24px;height:24px;min-width:24px;border:1.5px solid var(–border2);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .2s;background:#fff}
+.block.done .block-check{background:linear-gradient(135deg,var(–accent),var(–accent2));border-color:transparent}
+.block-check svg{display:none}
+.block.done .block-check svg{display:block}
+.block-info{flex:1;min-width:0}
+.block-time{font-size:11px;color:var(–text-dim);margin-bottom:3px}
+.block-title{font-size:15px;font-weight:500;color:var(–text)}
+.block-meta{font-size:11px;color:var(–text-dim);margin-top:2px}
+.cat-pill{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;background:var(–bg2);color:var(–text-mid);white-space:nowrap}
+.block[data-cat=“운동”] .cat-pill{background:rgba(255,140,105,.12);color:var(–cat-ex)}
+.block[data-cat=“집안일”] .cat-pill{background:rgba(105,192,255,.12);color:var(–cat-ch)}
+.block[data-cat=“공부”] .cat-pill{background:rgba(176,105,255,.12);color:var(–cat-st)}
+.block[data-cat=“자기계발”] .cat-pill{background:rgba(42,154,106,.1);color:var(–cat-sd)}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:60px 20px}
+.empty-emoji{font-size:52px;margin-bottom:16px}
+.empty-text{font-size:14px;color:var(–text-dim);line-height:1.8}
+
+/* FAB */
+.fab{position:fixed;bottom:82px;right:20px;width:54px;height:54px;background:linear-gradient(135deg,var(–accent),var(–accent2));border:none;border-radius:50%;font-size:26px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(126,184,247,.45);transition:transform .15s,box-shadow .15s;z-index:10}
+.fab:active{transform:scale(.9)}
+
+/* TEMPLATE CARD */
+.tmpl-card{background:var(–card);border:1.5px solid var(–border);border-radius:var(–r);padding:16px;margin-bottom:12px;box-shadow:var(–shadow)}
+.tmpl-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.tmpl-name{font-family:‘DM Serif Display’,serif;font-size:20px;color:var(–text)}
+.tmpl-count{background:var(–bg2);border-radius:20px;padding:3px 10px;font-size:11px;color:var(–text-mid)}
+.tmpl-item-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.tmpl-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(–text-mid)}
+.tmpl-item-dot{width:6px;height:6px;min-width:6px;border-radius:50%;background:var(–border2)}
+.tmpl-item[data-cat=“운동”] .tmpl-item-dot{background:var(–cat-ex)}
+.tmpl-item[data-cat=“집안일”] .tmpl-item-dot{background:var(–cat-ch)}
+.tmpl-item[data-cat=“공부”] .tmpl-item-dot{background:var(–cat-st)}
+.tmpl-item[data-cat=“자기계발”] .tmpl-item-dot{background:var(–cat-sd)}
+.tmpl-actions{display:flex;gap:8px}
+.btn-apply{flex:1;padding:10px;background:linear-gradient(135deg,var(–accent),var(–accent2));border:none;border-radius:var(–r-sm);color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .2s;font-family:‘Noto Sans KR’,sans-serif}
+.btn-apply:active{opacity:.8}
+.btn-edit-tmpl{padding:10px 14px;background:var(–bg2);border:1.5px solid var(–border);border-radius:var(–r-sm);font-size:13px;color:var(–text-mid);cursor:pointer;font-family:‘Noto Sans KR’,sans-serif}
+
+/* STATS */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-card{background:var(–card);border:1.5px solid var(–border);border-radius:var(–r);padding:16px;box-shadow:var(–shadow)}
+.stat-num{font-family:‘DM Serif Display’,serif;font-size:38px;color:var(–text);line-height:1}
+.stat-num span{font-size:18px;color:var(–text-mid)}
+.stat-lbl{font-size:11px;color:var(–text-dim);margin-top:4px}
+.week-row{display:flex;gap:6px;margin-top:12px}
+.week-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.week-bar-bg{width:100%;height:48px;background:var(–bg2);border-radius:6px;overflow:hidden;display:flex;align-items:flex-end}
+.week-bar-fill{width:100%;background:linear-gradient(180deg,var(–accent2),var(–accent));border-radius:6px;transition:height .5s}
+.week-day{font-size:10px;color:var(–text-dim)}
+.cat-bar-list{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.cat-bar-top{display:flex;justify-content:space-between;font-size:12px;color:var(–text-mid);margin-bottom:5px}
+.cat-bar-bg{height:6px;background:var(–bg2);border-radius:3px;overflow:hidden}
+.cat-bar-fill{height:100%;border-radius:3px;transition:width .5s}
+
+/* NAV */
+nav{position:fixed;bottom:0;left:0;right:0;background:rgba(247,243,238,.92);backdrop-filter:blur(12px);border-top:1px solid var(–border);display:flex;z-index:20;padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav-btn{flex:1;padding:10px 0 12px;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;opacity:.4;transition:opacity .2s}
+.nav-btn.active{opacity:1}
+.nav-icon{font-size:22px}
+.nav-lbl{font-size:9px;font-weight:500;color:var(–text-mid);letter-spacing:.5px}
+.nav-btn.active .nav-lbl{color:var(–text)}
+
+/* OVERLAY / SHEET */
+.overlay{position:fixed;inset:0;z-index:100;background:rgba(42,33,24,.4);backdrop-filter:blur(4px);display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.open{opacity:1;pointer-events:all}
+.sheet{width:100%;background:var(–card);border-radius:24px 24px 0 0;padding:0 20px 40px;transform:translateY(100%);transition:transform .35s cubic-bezier(.16,1,.3,1);max-height:92dvh;overflow-y:auto}
+.overlay.open .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;border-radius:2px;background:var(–border2);margin:12px auto 20px}
+.sheet-title{font-family:‘DM Serif Display’,serif;font-size:24px;color:var(–text);margin-bottom:20px}
+.form-group{margin-bottom:16px}
+.form-lbl{display:block;font-size:11px;font-weight:500;color:var(–text-dim);letter-spacing:.5px;text-transform:uppercase;margin-bottom:7px}
+.form-input{width:100%;background:var(–bg);border:1.5px solid var(–border);border-radius:var(–r-sm);color:var(–text);padding:12px 14px;font-family:‘Noto Sans KR’,sans-serif;font-size:15px;outline:none;appearance:none;transition:border-color .2s}
+.form-input:focus{border-color:var(–accent)}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cat-btn{padding:11px 8px;text-align:center;background:var(–bg);border:1.5px solid var(–border);border-radius:var(–r-sm);color:var(–text-mid);font-size:13px;font-family:‘Noto Sans KR’,sans-serif;cursor:pointer;transition:all .2s}
+.cat-btn.selected[data-val=“운동”]{background:rgba(255,140,105,.1);border-color:var(–cat-ex);color:var(–cat-ex)}
+.cat-btn.selected[data-val=“집안일”]{background:rgba(105,192,255,.1);border-color:var(–cat-ch);color:var(–cat-ch)}
+.cat-btn.selected[data-val=“공부”]{background:rgba(176,105,255,.1);border-color:var(–cat-st);color:var(–cat-st)}
+.cat-btn.selected[data-val=“자기계발”]{background:rgba(42,154,106,.1);border-color:var(–cat-sd);color:var(–cat-sd)}
+.btn-primary{width:100%;padding:15px;background:linear-gradient(135deg,var(–accent),var(–accent2));border:none;border-radius:var(–r-sm);color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:6px;transition:opacity .2s;font-family:‘Noto Sans KR’,sans-serif}
+.btn-primary:active{opacity:.85}
+.btn-secondary{width:100%;padding:13px;background:var(–bg);border:1.5px solid var(–border);border-radius:var(–r-sm);color:var(–text-mid);font-size:14px;cursor:pointer;margin-top:8px;font-family:‘Noto Sans KR’,sans-serif}
+.btn-danger{width:100%;padding:13px;background:#fff5f5;border:1.5px solid #ffd5d5;border-radius:var(–r-sm);color:var(–red);font-size:14px;cursor:pointer;margin-top:8px;font-family:‘Noto Sans KR’,sans-serif}
+
+/* LOCK */
+#lockScreen{position:fixed;inset:0;z-index:500;background:linear-gradient(160deg,#f0f7ff 0%,#fdf0f7 50%,#f0fff7 100%);display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px}
+#lockScreen.show{display:flex}
+.lock-badge{background:rgba(126,184,247,.15);border:1px solid rgba(126,184,247,.3);border-radius:20px;padding:5px 14px;font-size:11px;color:var(–accent);font-weight:500;letter-spacing:.5px;margin-bottom:28px}
+.lock-emoji-circle{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,rgba(126,184,247,.2),rgba(247,168,196,.2));border:2px solid rgba(126,184,247,.3);display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:20px;animation:lockPulse 3s ease-in-out infinite}
+@keyframes lockPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(126,184,247,.2)}50%{transform:scale(1.04);box-shadow:0 0 0 16px rgba(126,184,247,0)}}
+.lock-time-now{font-family:‘DM Serif Display’,serif;font-size:52px;color:var(–text);line-height:1;margin-bottom:4px}
+.lock-task-name{font-family:‘DM Serif Display’,serif;font-size:26px;color:var(–text);text-align:center;margin-top:12px}
+.lock-task-meta{font-size:13px;color:var(–text-mid);margin-top:4px}
+.lock-divider{width:48px;height:1.5px;background:var(–border2);margin:24px 0;border-radius:1px}
+.lock-elapsed-label{font-size:11px;color:var(–text-dim);margin-bottom:6px}
+.lock-elapsed{font-family:‘DM Serif Display’,serif;font-size:36px;color:var(–accent)}
+.lock-btn-done{margin-top:36px;width:100%;padding:18px;background:linear-gradient(135deg,var(–accent),var(–accent2));border:none;border-radius:var(–r);color:#fff;font-size:17px;font-weight:600;cursor:pointer;box-shadow:0 4px 20px rgba(126,184,247,.35);font-family:‘Noto Sans KR’,sans-serif}
+.lock-btn-skip{margin-top:10px;width:100%;padding:14px;background:transparent;border:1.5px solid var(–border2);border-radius:var(–r);color:var(–text-dim);font-size:13px;cursor:pointer;font-family:‘Noto Sans KR’,sans-serif}
+
+/* ALARM */
+#alarmRing{position:fixed;inset:0;z-index:450;background:linear-gradient(160deg,#e8f4ff 0%,#fde8f4 100%);display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px}
+#alarmRing.show{display:flex}
+.alarm-ring-emoji{font-size:70px;margin-bottom:20px;animation:shake .6s ease-in-out infinite}
+@keyframes shake{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+.alarm-ring-label{font-size:12px;color:var(–accent);font-weight:500;letter-spacing:1px;margin-bottom:8px}
+.alarm-ring-task{font-family:‘DM Serif Display’,serif;font-size:32px;color:var(–text);text-align:center;margin-bottom:8px}
+.alarm-ring-sub{font-size:14px;color:var(–text-mid);margin-bottom:40px}
+.alarm-start-btn{width:100%;padding:18px;background:linear-gradient(135deg,var(–accent),var(–accent2));border:none;border-radius:var(–r);color:#fff;font-size:17px;font-weight:600;cursor:pointer;font-family:‘Noto Sans KR’,sans-serif}
+.alarm-skip-btn{width:100%;padding:14px;margin-top:10px;background:transparent;border:1.5px solid var(–border2);border-radius:var(–r);color:var(–text-dim);font-size:13px;cursor:pointer;font-family:‘Noto Sans KR’,sans-serif}
+
+/* SKIP */
+#skipModal{position:fixed;inset:0;z-index:600;background:rgba(42,33,24,.5);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:24px}
+#skipModal.show{display:flex}
+.skip-box{background:var(–card);border-radius:var(–r);padding:24px;width:100%;box-shadow:var(–shadow-lg)}
+.skip-title{font-family:‘DM Serif Display’,serif;font-size:22px;color:var(–text);margin-bottom:6px}
+.skip-sub{font-size:13px;color:var(–text-dim);margin-bottom:16px;line-height:1.6}
+.skip-reasons{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.skip-reason-btn{padding:13px;background:var(–bg);border:1.5px solid var(–border);border-radius:var(–r-sm);color:var(–text-mid);font-size:14px;text-align:left;cursor:pointer;font-family:‘Noto Sans KR’,sans-serif;transition:all .2s}
+.skip-reason-btn.selected{border-color:var(–red);color:var(–text);background:rgba(247,126,126,.06)}
+.skip-confirm-btn{width:100%;padding:14px;background:var(–red);border:none;border-radius:var(–r-sm);color:#fff;font-size:15px;font-weight:600;cursor:pointer;opacity:.4;pointer-events:none;transition:opacity .2s;font-family:‘Noto Sans KR’,sans-serif}
+.skip-confirm-btn.enabled{opacity:1;pointer-events:all}
+
+/* TOAST */
+#toast{position:fixed;top:20px;left:16px;right:16px;z-index:800;background:var(–card);border:1.5px solid var(–border);border-radius:var(–r);padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(–shadow-lg);transform:translateY(-140%);transition:transform .4s cubic-bezier(.16,1,.3,1)}
+#toast.show{transform:translateY(0)}
+.toast-icon{font-size:22px}
+.toast-body{flex:1}
+.toast-ttl{font-size:12px;font-weight:600;color:var(–accent);margin-bottom:2px}
+.toast-msg{font-size:13px;color:var(–text-mid)}
+
+/* EDIT TEMPLATE ITEMS */
+.tmpl-item-edit{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(–border)}
+.tmpl-item-edit:last-child{border-bottom:none}
+.item-edit-info{flex:1;min-width:0}
+.item-edit-title{font-size:14px;font-weight:500;color:var(–text)}
+.item-edit-meta{font-size:11px;color:var(–text-dim);margin-top:2px}
+.item-del-btn{width:30px;height:30px;border-radius:50%;background:#fff5f5;border:1px solid #ffd5d5;color:var(–red);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.add-to-tmpl-btn{width:100%;padding:12px;background:var(–bg);border:1.5px dashed var(–border2);border-radius:var(–r-sm);color:var(–text-mid);font-size:13px;cursor:pointer;margin-top:12px;font-family:‘Noto Sans KR’,sans-serif;transition:all .2s}
+.add-to-tmpl-btn:active{background:var(–border)}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(–border2);border-radius:2px}
+</style>
+
+</head>
+<body>
+
+<div id="splash">
+  <div class="splash-emoji">🌸</div>
+  <div class="splash-title">on mode</div>
+  <div class="splash-sub">오늘도 한 걸음씩</div>
+  <div class="splash-dots">
+    <div class="splash-dot"></div><div class="splash-dot"></div>
+    <div class="splash-dot"></div><div class="splash-dot"></div>
+  </div>
+</div>
+
+<div id="alarmRing">
+  <div class="alarm-ring-label">⏰ 알림</div>
+  <div class="alarm-ring-emoji" id="alarmEmoji">🔔</div>
+  <div class="alarm-ring-task" id="alarmRingTask">운동</div>
+  <div class="alarm-ring-sub" id="alarmRingSub">지금 시작할 시간이에요</div>
+  <button class="alarm-start-btn" onclick="startTask()">지금 시작하기 ✨</button>
+  <button class="alarm-skip-btn" onclick="showSkipFromAlarm()">건너뛰기</button>
+</div>
+
+<div id="lockScreen">
+  <div class="lock-badge">집중 모드 · ON MODE</div>
+  <div class="lock-emoji-circle" id="lockEmoji">💪</div>
+  <div class="lock-time-now" id="lockCurrentTime">--:--</div>
+  <div class="lock-task-name" id="lockTaskName">태스크</div>
+  <div class="lock-task-meta" id="lockTaskMeta">30분</div>
+  <div class="lock-divider"></div>
+  <div class="lock-elapsed-label">진행 시간</div>
+  <div class="lock-elapsed" id="lockTimer">00:00</div>
+  <button class="lock-btn-done" onclick="completeTask()">완료했어요 ✓</button>
+  <button class="lock-btn-skip" onclick="showSkipModal()">건너뛰기 (이유 선택 필요)</button>
+</div>
+
+<div id="skipModal">
+  <div class="skip-box">
+    <div class="skip-title">왜 건너뛰나요?</div>
+    <div class="skip-sub">이유를 하나 골라야 닫을 수 있어요 🥲<br>기록은 남지만, 괜찮아요. 다음엔 해봐요.</div>
+    <div class="skip-reasons">
+      <button class="skip-reason-btn" onclick="selectSkipReason(this)">😴 몸이 너무 피곤해서</button>
+      <button class="skip-reason-btn" onclick="selectSkipReason(this)">📲 갑자기 일이 생겨서</button>
+      <button class="skip-reason-btn" onclick="selectSkipReason(this)">😶 의욕이 없어서</button>
+      <button class="skip-reason-btn" onclick="selectSkipReason(this)">✅ 이미 했거나 필요 없어서</button>
+    </div>
+    <button class="skip-confirm-btn" id="skipConfirmBtn" onclick="confirmSkip()">확인하고 닫기</button>
+  </div>
+</div>
+
+<div id="toast">
+  <div class="toast-icon" id="toastIcon">✨</div>
+  <div class="toast-body">
+    <div class="toast-ttl" id="toastTitle">알림</div>
+    <div class="toast-msg" id="toastMsg">메시지</div>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <div class="header-left">
+      <div class="date-chip"><div class="date-dot"></div><span id="dateLabel">로딩 중</span></div>
+      <div class="header-title" id="headerTitle">Good<br><em>Evening</em> ✦</div>
+    </div>
+    <div class="header-right">
+      <div class="time-bubble"><div class="time-big" id="headerTime">--:--</div></div>
+      <div class="progress-chip" id="progressChip">0 / 0</div>
+    </div>
+  </header>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-label-row">
+      <span class="progress-label-text" id="progressPct">0% 완료</span>
+      <span class="progress-label-text" id="progressRemain">남은 항목 0개</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('today')">📋 오늘</div>
+    <div class="tab" onclick="switchTab('templates')">🔁 루틴</div>
+    <div class="tab" onclick="switchTab('stats')">📊 기록</div>
+  </div>
+
+  <div class="panel active" id="panel-today"><div id="todayContent"></div></div>
+
+  <div class="panel" id="panel-templates">
+    <div class="section-label">저장된 루틴</div>
+    <div id="templateList"></div>
+    <button class="btn-secondary" onclick="openSaveTmpl()" style="margin-top:4px">💾 현재 할 일을 루틴으로 저장</button>
+  </div>
+
+  <div class="panel" id="panel-stats">
+    <div class="section-label">오늘 현황</div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num" id="statDone">0</div><div class="stat-lbl">완료한 항목</div></div>
+      <div class="stat-card"><div class="stat-num" id="statRate">0<span>%</span></div><div class="stat-lbl">완료율</div></div>
+      <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">총 항목</div></div>
+      <div class="stat-card"><div class="stat-num" id="statStreak">0<span>일</span></div><div class="stat-lbl">연속 달성</div></div>
+    </div>
+    <div class="section-label" style="margin-top:20px">최근 7일</div>
+    <div class="week-row" id="weekRow"></div>
+    <div class="section-label" style="margin-top:20px">카테고리별 완료율</div>
+    <div class="cat-bar-list" id="catStats"></div>
+  </div>
+
+  <nav>
+    <button class="nav-btn active" onclick="switchTab('today')"><div class="nav-icon">📋</div><div class="nav-lbl">오늘</div></button>
+    <button class="nav-btn" onclick="switchTab('templates')"><div class="nav-icon">🔁</div><div class="nav-lbl">루틴</div></button>
+    <button class="nav-btn" onclick="switchTab('stats')"><div class="nav-icon">📊</div><div class="nav-lbl">기록</div></button>
+  </nav>
+</div>
+
+<button class="fab" id="fabBtn" onclick="openAddTask()">+</button>
+
+<!-- ADD TASK -->
+
+<div class="overlay" id="addTaskOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">할 일 추가</div>
+    <div class="form-group"><label class="form-lbl">이름</label><input class="form-input" id="taskName" placeholder="예: 윗몸일으키기 30개" maxlength="30"></div>
+    <div class="form-group">
+      <label class="form-lbl">카테고리</label>
+      <div class="cat-grid">
+        <button class="cat-btn" data-val="운동" onclick="selectCat(this,'addTaskOverlay')">🔥 운동</button>
+        <button class="cat-btn" data-val="집안일" onclick="selectCat(this,'addTaskOverlay')">🧹 집안일</button>
+        <button class="cat-btn" data-val="공부" onclick="selectCat(this,'addTaskOverlay')">📚 공부</button>
+        <button class="cat-btn" data-val="자기계발" onclick="selectCat(this,'addTaskOverlay')">⚡ 자기계발</button>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-lbl">시작 시간 (선택)</label><input class="form-input" id="taskTime" type="time"></div>
+    <div class="form-group"><label class="form-lbl">소요 시간 (분)</label><input class="form-input" id="taskDuration" type="number" min="5" max="240" value="30"></div>
+    <button class="btn-primary" onclick="saveTask()">추가하기 ✨</button>
+    <button class="btn-secondary" onclick="closeOverlay('addTaskOverlay')">취소</button>
+  </div>
+</div>
+
+<!-- SAVE TEMPLATE -->
+
+<div class="overlay" id="saveTmplOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">루틴으로 저장</div>
+    <div class="form-group"><label class="form-lbl">루틴 이름</label><input class="form-input" id="tmplNameInput" placeholder="예: 평일 퇴근 후"></div>
+    <button class="btn-primary" onclick="saveTemplate()">저장하기</button>
+    <button class="btn-secondary" onclick="closeOverlay('saveTmplOverlay')">취소</button>
+  </div>
+</div>
+
+<!-- EDIT TEMPLATE -->
+
+<div class="overlay" id="editTmplOverlay">
+  <div class="sheet" id="editTmplSheet">
+    <div class="sheet-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div class="sheet-title" id="editTmplTitle" style="margin-bottom:0">루틴 수정</div>
+      <button onclick="deleteCurrentTemplate()" style="padding:7px 13px;background:#fff5f5;border:1.5px solid #ffd5d5;border-radius:var(--r-sm);color:var(--red);font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif">삭제</button>
+    </div>
+    <div class="form-group" style="margin-top:12px"><label class="form-lbl">루틴 이름</label><input class="form-input" id="editTmplName" placeholder="루틴 이름"></div>
+    <div class="form-lbl" style="margin-bottom:10px">항목 목록</div>
+    <div id="editTmplItems"></div>
+    <button class="add-to-tmpl-btn" onclick="openAddToTemplate()">+ 항목 추가</button>
+    <button class="btn-primary" style="margin-top:16px" onclick="saveTmplEdits()">저장하기</button>
+    <button class="btn-secondary" onclick="closeOverlay('editTmplOverlay')">취소</button>
+  </div>
+</div>
+
+<!-- ADD ITEM TO TEMPLATE -->
+
+<div class="overlay" id="addTmplItemOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">항목 추가</div>
+    <div class="form-group"><label class="form-lbl">이름</label><input class="form-input" id="tmplItemName" placeholder="예: 스트레칭" maxlength="30"></div>
+    <div class="form-group">
+      <label class="form-lbl">카테고리</label>
+      <div class="cat-grid">
+        <button class="cat-btn" data-val="운동" onclick="selectCat(this,'addTmplItemOverlay')">🔥 운동</button>
+        <button class="cat-btn" data-val="집안일" onclick="selectCat(this,'addTmplItemOverlay')">🧹 집안일</button>
+        <button class="cat-btn" data-val="공부" onclick="selectCat(this,'addTmplItemOverlay')">📚 공부</button>
+        <button class="cat-btn" data-val="자기계발" onclick="selectCat(this,'addTmplItemOverlay')">⚡ 자기계발</button>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-lbl">시작 시간 (선택)</label><input class="form-input" id="tmplItemTime" type="time"></div>
+    <div class="form-group"><label class="form-lbl">소요 시간 (분)</label><input class="form-input" id="tmplItemDuration" type="number" min="5" max="240" value="30"></div>
+    <button class="btn-primary" onclick="addItemToTemplate()">추가하기</button>
+    <button class="btn-secondary" onclick="closeOverlay('addTmplItemOverlay')">취소</button>
+  </div>
+</div>
+
+<script>
+let tasks=JSON.parse(localStorage.getItem('onmode_tasks')||'[]');
+let templates=JSON.parse(localStorage.getItem('onmode_templates')||'[]');
+let stats=JSON.parse(localStorage.getItem('onmode_stats')||'{}');
+let fired=new Set(JSON.parse(localStorage.getItem('onmode_fired')||'[]'));
+let catSelections={};  // overlayId -> selectedCat
+let currentTaskId=null,editingTmplId=null,lockInterval=null,lockStart=null,skipFromAlarm=false;
+let editingTmplItems=[];
+
+const catEmoji={'운동':'💪','집안일':'🧹','공부':'📚','자기계발':'⚡'};
+const catColors={'운동':'var(--cat-ex)','집안일':'var(--cat-ch)','공부':'var(--cat-st)','자기계발':'var(--cat-sd)'};
+
+window.addEventListener('load',()=>{
+  setTimeout(()=>document.getElementById('splash').classList.add('hide'),1600);
+  if(!templates.length) initDefaultTemplates();
+  startClock(); updateDateHeader(); renderAll();
+  setInterval(checkAlarms,20000); checkAlarms();
+  // close overlays on backdrop click
+  document.querySelectorAll('.overlay').forEach(el=>{
+    el.addEventListener('click',e=>{ if(e.target===el) el.classList.remove('open'); });
+  });
+});
+
+function initDefaultTemplates(){
+  templates=[
+    {id:genId(),name:'평일 퇴근 후',items:[
+      {id:genId(),title:'설거지',cat:'집안일',time:'19:00',duration:15},
+      {id:genId(),title:'운동 (홈트)',cat:'운동',time:'19:30',duration:30},
+      {id:genId(),title:'청소기 돌리기',cat:'집안일',time:'20:15',duration:20},
+      {id:genId(),title:'스트레칭',cat:'운동',time:'21:00',duration:10},
+    ]},
+    {id:genId(),name:'주말 루틴',items:[
+      {id:genId(),title:'아침 운동',cat:'운동',time:'09:00',duration:45},
+      {id:genId(),title:'대청소',cat:'집안일',time:'11:00',duration:60},
+      {id:genId(),title:'빨래 & 정리',cat:'집안일',time:'14:00',duration:30},
+      {id:genId(),title:'저녁 산책',cat:'운동',time:'18:00',duration:30},
+    ]},
+  ];
+  saveTmpl();
+}
+
+function startClock(){ tick(); setInterval(tick,10000); }
+function tick(){
+  const now=new Date();
+  const t=fmt2(now.getHours())+':'+fmt2(now.getMinutes());
+  document.getElementById('headerTime').textContent=t;
+  const lc=document.getElementById('lockCurrentTime');
+  if(lc) lc.textContent=t;
+  updateActiveNow();
+}
+function fmt2(n){ return String(n).padStart(2,'0'); }
+
+function updateDateHeader(){
+  const days=['일','월','화','수','목','금','토'];
+  const now=new Date();
+  document.getElementById('dateLabel').textContent=`${now.getFullYear()}.${fmt2(now.getMonth()+1)}.${fmt2(now.getDate())} ${days[now.getDay()]}`;
+  const h=now.getHours();
+  const greet=h<12?'Good<br><em>Morning</em> ☀️':h<18?'Good<br><em>Afternoon</em> 🌤':'Good<br><em>Evening</em> 🌙';
+  document.getElementById('headerTitle').innerHTML=greet+' ✦';
+}
+
+function checkAlarms(){
+  const now=new Date();
+  const hm=fmt2(now.getHours())+':'+fmt2(now.getMinutes());
+  tasks.forEach(t=>{
+    if(!t.done&&!t.skipped&&t.time===hm&&!fired.has(t.id)){
+      fired.add(t.id);
+      localStorage.setItem('onmode_fired',JSON.stringify([...fired]));
+      triggerAlarm(t);
+    }
+  });
+}
+function triggerAlarm(task){
+  currentTaskId=task.id;
+  document.getElementById('alarmRingTask').textContent=task.title;
+  document.getElementById('alarmRingSub').textContent=`${task.time} · ${task.duration}분`;
+  document.getElementById('alarmEmoji').textContent=catEmoji[task.cat]||'🔔';
+  document.getElementById('alarmRing').classList.add('show');
+  if(navigator.vibrate) navigator.vibrate([400,100,400,100,400]);
+}
+function startTask(){
+  document.getElementById('alarmRing').classList.remove('show');
+  const task=tasks.find(t=>t.id===currentTaskId);
+  if(task) openLockScreen(task);
+}
+function showSkipFromAlarm(){
+  skipFromAlarm=true;
+  document.getElementById('alarmRing').classList.remove('show');
+  showSkipModal();
+}
+
+function openLockScreen(task){
+  document.getElementById('lockEmoji').textContent=catEmoji[task.cat]||'✅';
+  document.getElementById('lockTaskName').textContent=task.title;
+  document.getElementById('lockTaskMeta').textContent=`${task.duration}분 · ${task.cat}`;
+  document.getElementById('lockScreen').classList.add('show');
+  lockStart=Date.now();
+  updateLockTimer();
+  lockInterval=setInterval(updateLockTimer,1000);
+  if(navigator.vibrate) navigator.vibrate(200);
+}
+function updateLockTimer(){
+  const e=Math.floor((Date.now()-lockStart)/1000);
+  document.getElementById('lockTimer').textContent=fmt2(Math.floor(e/60))+':'+fmt2(e%60);
+}
+function completeTask(){
+  clearInterval(lockInterval);
+  const idx=tasks.findIndex(t=>t.id===currentTaskId);
+  if(idx>-1) tasks[idx].done=true;
+  saveTasks(); recordStat();
+  document.getElementById('lockScreen').classList.remove('show');
+  currentTaskId=null; lockStart=null;
+  showToast('✨','완료!','잘 하셨어요! 계속 이 기세로 가요 💪');
+  renderAll();
+}
+function showSkipModal(){
+  document.querySelectorAll('.skip-reason-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('skipConfirmBtn').classList.remove('enabled');
+  document.getElementById('skipModal').classList.add('show');
+}
+function selectSkipReason(btn){
+  document.querySelectorAll('.skip-reason-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('skipConfirmBtn').classList.add('enabled');
+}
+function confirmSkip(){
+  if(currentTaskId){
+    const idx=tasks.findIndex(t=>t.id===currentTaskId);
+    if(idx>-1) tasks[idx].skipped=true;
+    saveTasks();
+  }
+  clearInterval(lockInterval);
+  document.getElementById('skipModal').classList.remove('show');
+  document.getElementById('lockScreen').classList.remove('show');
+  skipFromAlarm=false; currentTaskId=null; lockStart=null;
+  showToast('😅','건너뜀','다음엔 꼭 해봐요. 기록은 남아요.');
+  renderAll();
+}
+
+function renderAll(){ renderToday(); renderTemplates(); renderStats(); updateProgress(); }
+
+function renderToday(){
+  const c=document.getElementById('todayContent');
+  if(!tasks.length){
+    c.innerHTML=`<div class="empty-state"><div class="empty-emoji">🌿</div><div class="empty-text">아직 할 일이 없어요!<br>+ 버튼으로 추가하거나<br>루틴 탭에서 불러와 보세요 🌸</div></div>`;
+    return;
+  }
+  const pending=tasks.filter(t=>!t.done&&!t.skipped).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+  const done=tasks.filter(t=>t.done);
+  const skipped=tasks.filter(t=>t.skipped);
+  let html='';
+  if(pending.length){ html+=`<div class="section-label">할 일 (${pending.length})</div><div class="block-list">`; pending.forEach((t,i)=>{html+=blockHTML(t,i);}); html+='</div>'; }
+  if(done.length){ html+=`<div class="section-label">완료 ✓ (${done.length})</div><div class="block-list">`; done.forEach((t,i)=>{html+=blockHTML(t,i);}); html+='</div>'; }
+  if(skipped.length){ html+=`<div class="section-label">건너뜀 (${skipped.length})</div><div class="block-list">`; skipped.forEach((t,i)=>{html+=blockHTML(t,i);}); html+='</div>'; }
+  c.innerHTML=html;
+  updateActiveNow();
+}
+function blockHTML(t,idx){
+  const doneClass=(t.done||t.skipped)?'done':'';
+  const delay=Math.min(idx*.05,.35);
+  return `<div class="block ${doneClass}" data-cat="${t.cat||''}" data-id="${t.id}" style="animation-delay:${delay}s" onclick="handleBlockClick('${t.id}')">
+    <div class="block-check"><svg viewBox="0 0 24 24" stroke="white" stroke-width="2.5" fill="none" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <div class="block-info">
+      <div class="block-time">${t.time||''}</div>
+      <div class="block-title">${catEmoji[t.cat]||'○'} ${t.title}</div>
+      <div class="block-meta">${t.duration}분 &nbsp;<span class="cat-pill">${t.cat||'기타'}</span></div>
+    </div>
+  </div>`;
+}
+function handleBlockClick(id){
+  const task=tasks.find(t=>t.id===id);
+  if(!task||task.done||task.skipped) return;
+  currentTaskId=id; openLockScreen(task);
+}
+function updateActiveNow(){
+  const now=new Date();
+  const hm=fmt2(now.getHours())+':'+fmt2(now.getMinutes());
+  document.querySelectorAll('.block').forEach(el=>{
+    const task=tasks.find(t=>t.id===el.dataset.id);
+    if(!task||task.done||task.skipped) return;
+    el.classList.remove('active-now');
+    el.querySelector('.now-badge')?.remove();
+    if(task.time&&task.time<=hm){
+      if(t2m(hm)<t2m(task.time)+(task.duration||30)){
+        el.classList.add('active-now');
+        const b=document.createElement('div'); b.className='now-badge'; b.textContent='NOW'; el.appendChild(b);
+      }
+    }
+  });
+}
+function t2m(t){ const[h,m]=t.split(':').map(Number); return h*60+m; }
+
+function updateProgress(){
+  const total=tasks.length, done=tasks.filter(t=>t.done).length;
+  const pct=total>0?Math.round(done/total*100):0;
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('progressChip').textContent=`${done} / ${total}`;
+  document.getElementById('progressPct').textContent=pct+'% 완료';
+  document.getElementById('progressRemain').textContent=`남은 항목 ${total-done}개`;
+}
+
+function renderTemplates(){
+  const c=document.getElementById('templateList');
+  if(!templates.length){ c.innerHTML='<div style="color:var(--text-dim);font-size:13px;padding:16px 0;">저장된 루틴이 없어요</div>'; return; }
+  c.innerHTML=templates.map(tmpl=>`
+    <div class="tmpl-card">
+      <div class="tmpl-header"><div class="tmpl-name">${tmpl.name}</div><div class="tmpl-count">${tmpl.items.length}개</div></div>
+      <div class="tmpl-item-list">
+        ${tmpl.items.slice(0,4).map(it=>`<div class="tmpl-item" data-cat="${it.cat}"><div class="tmpl-item-dot"></div><span>${it.time||'--'} &nbsp;${it.title} (${it.duration}분)</span></div>`).join('')}
+        ${tmpl.items.length>4?`<div class="tmpl-item"><div class="tmpl-item-dot"></div>+${tmpl.items.length-4}개 더</div>`:''}
+      </div>
+      <div class="tmpl-actions">
+        <button class="btn-apply" onclick="applyTemplate('${tmpl.id}')">오늘에 적용</button>
+        <button class="btn-edit-tmpl" onclick="openEditTemplate('${tmpl.id}')">✏️ 수정</button>
+      </div>
+    </div>`).join('');
+}
+function applyTemplate(id){
+  const tmpl=templates.find(t=>t.id===id); if(!tmpl) return;
+  const newTasks=tmpl.items.map(it=>({id:genId(),title:it.title,cat:it.cat,time:it.time,duration:it.duration,done:false,skipped:false}));
+  tasks=[...tasks,...newTasks]; saveTasks();
+  switchTab('today');
+  showToast('🌸','루틴 적용!',`${tmpl.name} ${newTasks.length}개 추가됐어요`);
+  renderAll();
+}
+
+// ── EDIT TEMPLATE ──
+function openEditTemplate(id){
+  const tmpl=templates.find(t=>t.id===id); if(!tmpl) return;
+  editingTmplId=id;
+  editingTmplItems=tmpl.items.map(it=>({...it}));
+  document.getElementById('editTmplName').value=tmpl.name;
+  renderEditTmplItems();
+  openOverlay('editTmplOverlay');
+}
+function renderEditTmplItems(){
+  const c=document.getElementById('editTmplItems');
+  if(!editingTmplItems.length){ c.innerHTML='<div style="color:var(--text-dim);font-size:13px;padding:8px 0;">항목이 없어요</div>'; return; }
+  c.innerHTML=editingTmplItems.map((it,idx)=>`
+    <div class="tmpl-item-edit">
+      <div class="item-edit-info">
+        <div class="item-edit-title">${catEmoji[it.cat]||'○'} ${it.title}</div>
+        <div class="item-edit-meta">${it.time||'--'} · ${it.duration}분 · ${it.cat}</div>
+      </div>
+      <button class="item-del-btn" onclick="removeTmplItem(${idx})">×</button>
+    </div>`).join('');
+}
+function removeTmplItem(idx){ editingTmplItems.splice(idx,1); renderEditTmplItems(); }
+function openAddToTemplate(){
+  document.getElementById('tmplItemName').value='';
+  document.getElementById('tmplItemTime').value='';
+  document.getElementById('tmplItemDuration').value='30';
+  catSelections['addTmplItemOverlay']='';
+  document.querySelectorAll('#addTmplItemOverlay .cat-btn').forEach(b=>b.classList.remove('selected'));
+  openOverlay('addTmplItemOverlay');
+}
+function addItemToTemplate(){
+  const name=document.getElementById('tmplItemName').value.trim();
+  const cat=catSelections['addTmplItemOverlay'];
+  if(!name){ showToast('⚠️','입력 필요','이름을 입력해주세요'); return; }
+  if(!cat){ showToast('⚠️','입력 필요','카테고리를 선택해주세요'); return; }
+  editingTmplItems.push({id:genId(),title:name,cat,time:document.getElementById('tmplItemTime').value||null,duration:parseInt(document.getElementById('tmplItemDuration').value)||30});
+  closeOverlay('addTmplItemOverlay');
+  renderEditTmplItems();
+  showToast('➕','항목 추가','저장 버튼을 눌러야 반영돼요');
+}
+function saveTmplEdits(){
+  const name=document.getElementById('editTmplName').value.trim();
+  if(!name){ showToast('⚠️','입력 필요','루틴 이름을 입력해주세요'); return; }
+  const idx=templates.findIndex(t=>t.id===editingTmplId);
+  if(idx>-1){ templates[idx].name=name; templates[idx].items=editingTmplItems; }
+  saveTmpl(); closeOverlay('editTmplOverlay');
+  showToast('💾','루틴 저장!',`"${name}" 루틴이 업데이트됐어요`);
+  renderTemplates();
+}
+function deleteCurrentTemplate(){
+  if(!confirm('이 루틴을 삭제할까요?')) return;
+  templates=templates.filter(t=>t.id!==editingTmplId);
+  saveTmpl(); closeOverlay('editTmplOverlay');
+  showToast('🗑️','삭제됨','루틴이 삭제됐어요');
+  renderTemplates();
+}
+function openSaveTmpl(){
+  if(!tasks.length){ showToast('⚠️','항목 없음','오늘 할 일을 먼저 추가해주세요'); return; }
+  document.getElementById('tmplNameInput').value='';
+  openOverlay('saveTmplOverlay');
+}
+function saveTemplate(){
+  const name=document.getElementById('tmplNameInput').value.trim();
+  if(!name){ showToast('⚠️','입력 필요','루틴 이름을 입력해주세요'); return; }
+  templates.push({id:genId(),name,items:tasks.map(t=>({id:genId(),title:t.title,cat:t.cat,time:t.time,duration:t.duration}))});
+  saveTmpl(); closeOverlay('saveTmplOverlay');
+  showToast('💾','루틴 저장!',`"${name}" 루틴이 저장됐어요`);
+  renderTemplates();
+}
+
+// STATS
+function renderStats(){
+  const total=tasks.length, done=tasks.filter(t=>t.done).length;
+  const rate=total>0?Math.round(done/total*100):0;
+  document.getElementById('statTotal').textContent=total;
+  document.getElementById('statDone').textContent=done;
+  document.getElementById('statRate').innerHTML=`${rate}<span>%</span>`;
+  document.getElementById('statStreak').innerHTML=`${calcStreak()}<span>일</span>`;
+  const row=document.getElementById('weekRow'), days=['일','월','화','수','목','금','토'], now=new Date();
+  let html='';
+  for(let i=6;i>=0;i--){
+    const d=new Date(now); d.setDate(d.getDate()-i);
+    const key=d.toISOString().slice(0,10), s=stats[key], pct=s?s.rate:0;
+    html+=`<div class="week-col"><div class="week-bar-bg"><div class="week-bar-fill" style="height:${pct}%"></div></div><div class="week-day" style="${i===0?'color:var(--accent);font-weight:600':''}">${days[d.getDay()]}</div></div>`;
+  }
+  row.innerHTML=html;
+  const cats=['운동','집안일','공부','자기계발'];
+  let catHtml='';
+  cats.forEach(cat=>{
+    const ct=tasks.filter(t=>t.cat===cat); if(!ct.length) return;
+    const cd=ct.filter(t=>t.done).length, cp=Math.round(cd/ct.length*100);
+    catHtml+=`<div class="cat-bar-item"><div class="cat-bar-top"><span>${catEmoji[cat]} ${cat}</span><span>${cd}/${ct.length}</span></div><div class="cat-bar-bg"><div class="cat-bar-fill" style="width:${cp}%;background:${catColors[cat]}"></div></div></div>`;
+  });
+  document.getElementById('catStats').innerHTML=catHtml||'<div style="color:var(--text-dim);font-size:13px">아직 데이터가 없어요</div>';
+}
+function calcStreak(){
+  let s=0; const now=new Date();
+  for(let i=0;i<30;i++){
+    const d=new Date(now); d.setDate(d.getDate()-i);
+    const k=d.toISOString().slice(0,10);
+    if(stats[k]&&stats[k].rate>=50) s++;
+    else if(i>0) break;
+  }
+  return s;
+}
+function recordStat(){
+  const key=new Date().toISOString().slice(0,10);
+  const total=tasks.length, done=tasks.filter(t=>t.done).length;
+  stats[key]={total,done,rate:total>0?Math.round(done/total*100):0};
+  localStorage.setItem('onmode_stats',JSON.stringify(stats));
+}
+
+// ADD TASK
+function openAddTask(){
+  document.getElementById('taskName').value='';
+  document.getElementById('taskTime').value='';
+  document.getElementById('taskDuration').value='30';
+  catSelections['addTaskOverlay']='';
+  document.querySelectorAll('#addTaskOverlay .cat-btn').forEach(b=>b.classList.remove('selected'));
+  openOverlay('addTaskOverlay');
+}
+function selectCat(btn, overlayId){
+  document.querySelectorAll(`#${overlayId} .cat-btn`).forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  catSelections[overlayId]=btn.dataset.val;
+}
+function saveTask(){
+  const name=document.getElementById('taskName').value.trim();
+  const cat=catSelections['addTaskOverlay'];
+  if(!name){ showToast('⚠️','입력 필요','할 일 이름을 입력해주세요'); return; }
+  if(!cat){ showToast('⚠️','입력 필요','카테고리를 선택해주세요'); return; }
+  tasks.push({id:genId(),title:name,cat,time:document.getElementById('taskTime').value||null,duration:parseInt(document.getElementById('taskDuration').value)||30,done:false,skipped:false});
+  saveTasks(); closeOverlay('addTaskOverlay');
+  showToast('🌸','추가 완료!',`"${name}" 추가됐어요`);
+  renderAll();
+}
+
+// OVERLAYS
+function openOverlay(id){ document.getElementById(id).classList.add('open'); }
+function closeOverlay(id){ document.getElementById(id).classList.remove('open'); }
+
+// TABS
+function switchTab(tab){
+  const names=['today','templates','stats'];
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',names[i]===tab));
+  document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
+  document.getElementById(`panel-${tab}`).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach((el,i)=>el.classList.toggle('active',names[i]===tab));
+  document.getElementById('fabBtn').style.display=tab==='today'?'flex':'none';
+}
+
+// TOAST
+function showToast(icon,title,msg){
+  document.getElementById('toastIcon').textContent=icon;
+  document.getElementById('toastTitle').textContent=title;
+  document.getElementById('toastMsg').textContent=msg;
+  const t=document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+// PERSIST
+function saveTasks(){ localStorage.setItem('onmode_tasks',JSON.stringify(tasks)); }
+function saveTmpl() { localStorage.setItem('onmode_templates',JSON.stringify(templates)); }
+function genId()    { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+</script>
+
+</body>
+</html>
